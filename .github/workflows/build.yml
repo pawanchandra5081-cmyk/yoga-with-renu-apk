@@ -21,10 +21,14 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
       - name: Create Android project
         run: |
           mkdir -p app/src/main/java/com/yogawithrenu/app
-          mkdir -p app/src/main/res/values
 
           cat > settings.gradle <<'EOF'
           pluginManagement {
@@ -34,6 +38,7 @@ jobs:
                   gradlePluginPortal()
               }
           }
+
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
               repositories {
@@ -41,11 +46,16 @@ jobs:
                   mavenCentral()
               }
           }
+
           rootProject.name = "YogaWithRenu"
           include ':app'
           EOF
 
-          echo "plugins { id 'com.android.application' version '8.7.3' apply false }" > build.gradle
+          cat > build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
 
           cat > app/build.gradle <<'EOF'
           plugins {
@@ -69,17 +79,21 @@ jobs:
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET"/>
+
               <application
                   android:theme="@android:style/Theme.Material.Light.NoActionBar"
                   android:label="Yoga with Renu"
                   android:usesCleartextTraffic="false">
+
                   <activity
                       android:name="com.yogawithrenu.app.MainActivity"
                       android:exported="true">
+
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN"/>
                           <category android:name="android.intent.category.LAUNCHER"/>
                       </intent-filter>
+
                   </activity>
               </application>
           </manifest>
@@ -102,12 +116,14 @@ jobs:
                   super.onCreate(savedInstanceState);
 
                   webView = new WebView(this);
+
                   WebSettings settings = webView.getSettings();
                   settings.setJavaScriptEnabled(true);
                   settings.setDomStorageEnabled(true);
-                  webView.setWebViewClient(new WebViewClient());
 
+                  webView.setWebViewClient(new WebViewClient());
                   setContentView(webView);
+
                   webView.loadUrl("https://yogawithrenu1.netlify.app/");
               }
 
@@ -123,10 +139,7 @@ jobs:
           EOF
 
       - name: Build APK
-        run: |
-          gradle wrapper --gradle-version 8.9
-          chmod +x gradlew
-          ./gradlew assembleDebug
+        run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -134,4 +147,5 @@ jobs:
           name: Yoga-with-Renu-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          
           
