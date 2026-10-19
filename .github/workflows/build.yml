@@ -18,10 +18,13 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: 12266719
+      - name: Verify Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          ls -la "$ANDROID_HOME"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -40,7 +43,6 @@ jobs:
                   gradlePluginPortal()
               }
           }
-
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
               repositories {
@@ -48,7 +50,6 @@ jobs:
                   mavenCentral()
               }
           }
-
           rootProject.name = "YogaWithRenu"
           include ':app'
           EOF
@@ -63,11 +64,9 @@ jobs:
           plugins {
               id 'com.android.application'
           }
-
           android {
               namespace 'com.yogawithrenu.app'
               compileSdk 35
-
               defaultConfig {
                   applicationId 'com.yogawithrenu.app'
                   minSdk 23
@@ -81,21 +80,16 @@ jobs:
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET"/>
-
               <application
                   android:theme="@android:style/Theme.Material.Light.NoActionBar"
-                  android:label="Yoga with Renu"
-                  android:usesCleartextTraffic="false">
-
+                  android:label="Yoga with Renu">
                   <activity
                       android:name="com.yogawithrenu.app.MainActivity"
                       android:exported="true">
-
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN"/>
                           <category android:name="android.intent.category.LAUNCHER"/>
                       </intent-filter>
-
                   </activity>
               </application>
           </manifest>
@@ -111,21 +105,17 @@ jobs:
           import android.webkit.WebSettings;
 
           public class MainActivity extends Activity {
-              WebView webView;
+              private WebView webView;
 
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-
                   webView = new WebView(this);
-
                   WebSettings settings = webView.getSettings();
                   settings.setJavaScriptEnabled(true);
                   settings.setDomStorageEnabled(true);
-
                   webView.setWebViewClient(new WebViewClient());
                   setContentView(webView);
-
                   webView.loadUrl("https://yogawithrenu1.netlify.app/");
               }
 
@@ -149,6 +139,7 @@ jobs:
           name: Yoga-with-Renu-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          
           
           
           
